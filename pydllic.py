@@ -4,12 +4,15 @@ import os
 
 
 class pydllic():
+    # this assumes you write one extern "C" per function
     func_re = re.compile(r'extern\s+"[Cc]"\s+(.*?)\s*\((.*?)\)')
     # type_re assumes there are zero comments in the cpp
-    type_re = re.compile(r"struct\s+(.*?)\s*{([^}]*)};")
+    type_re = re.compile(r"struct\s+(.*?)\s*{(.*?)};",
+                         re.DOTALL | re.MULTILINE
+    )
     # used to remove comments before finding types
     comment_re = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE
+                            re.DOTALL | re.MULTILINE
     )
     py = """import ctypes
 
@@ -127,6 +130,7 @@ if __name__ == "__main__":
                 name, members = match
                 members = members.split(";")
                 members = [m.strip() for m in members]
+                members = [m.split("=")[0] for m in members]
                 members = [m.rsplit() for m in members]
                 members = [(m[-1], pydllic.get_type(m[-2])) for m in members if m]
                 types[name] = members
